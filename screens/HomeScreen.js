@@ -9,11 +9,15 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  SafeAreaView
 } from 'react-native';
-import { WebBrowser } from 'expo';
+import { WebBrowser, Icon } from 'expo';
 
 import { apiEndpoint } from '../constants/Prismic';
+import Colors from '../constants/Colors';
+import Card from '../components/Card';
 import { MonoText } from '../components/StyledText';
+import { extractText } from '../utils/prismicUtils';
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
@@ -34,58 +38,43 @@ export default class HomeScreen extends React.Component {
     };
   }
 
+  componentWillMount() {
+    this._submitSearchQuery();
+  }
+
   render() {
     return (
-      <View style={styles.container}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-          <View style={styles.welcomeContainer}>
-            <Image
-              source={
-                __DEV__
-                  ? require('../assets/images/robot-dev.png')
-                  : require('../assets/images/robot-prod.png')
-              }
-              style={styles.welcomeImage}
+      <SafeAreaView style={styles.container}>
+        <View style={styles.welcomeContainer}>
+          <Image
+            source={require('../assets/images/TextLogoWhite.png')}
+            style={styles.bannerImage}
+          />
+        </View>
+
+        <View style={styles.getStartedContainer}>
+          <View style={styles.searchContainer}>
+            <Icon.MaterialCommunityIcons
+              name="magnify"
+              size={24}
+              color={Colors.textColor}
+              style={styles.metaIcon}
+            />
+
+            <TextInput style={styles.searchInput}
+              placeholder="Search..."
+              placeholderTextColor={Colors.textColorSecondary}
+              onChangeText={text => this.setState({ text })}
+              onEndEditing={this._submitSearchQuery}
+              value={this.state.text}
             />
           </View>
+        </View>
 
-          <View style={styles.getStartedContainer}>
-            {this._maybeRenderDevelopmentModeWarning()}
-
-            <Text style={styles.getStartedText}>
-              Drinking Games Guide
-            </Text>
-
-            <View style={{
-              alignSelf: 'stretch'
-            }}>
-              <TextInput
-                style = {
-                  {
-                    alignSelf: 'stretch',
-                    height: 40,
-                    borderColor: 'gray',
-                    borderWidth: 1
-                  }
-                }
-                onChangeText={text => this.setState({ text })}
-                onEndEditing={this._submitSearchQuery}
-                value={this.state.text}
-              />
-            </View>
-          </View>
-
+        <ScrollView contentContainerStyle={styles.contentContainer}>
           {this._renderResults()}
         </ScrollView>
-
-        <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
-        </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -97,33 +86,34 @@ export default class HomeScreen extends React.Component {
         name,
         description,
         intensity,
+        category,
         players
       } = item.data;
+
+      const title = extractText(name);
+
       return (
-        <View>
-          <View>{name.map(paragraph => <Text>{paragraph.text}</Text>)}</View>
-          <View>{description.map(paragraph => <Text>{paragraph.text}</Text>)}</View>
-          <Text>Intensity: {intensity}</Text>
-          <Text>Players: {players}</Text>
-        </View>
+        <TouchableOpacity key={item.id}
+          onPress={() => this.props.navigation.navigate('GameDetail', { item, title })}>
+          <Card>
+            <Text style={styles.cardTitle}>{title}</Text>
+            <View style={styles.gameMeta}>
+              <Icon.MaterialCommunityIcons
+                name="account-multiple"
+                size={20}
+                color="white"
+                style={styles.metaIcon}
+              />
+
+              <Text style={styles.cardText}>{players}</Text>
+            </View>
+
+            <Text style={styles.cardText}>{description.map(paragraph => paragraph.text)}</Text>
+            <Text style={styles.cardText}>{category}</Text>
+          </Card>
+        </TouchableOpacity>
       );
     });
-  }
-
-  _maybeRenderDevelopmentModeWarning() {
-    if (__DEV__) {
-      return (
-        <Text style={styles.developmentModeText}>
-          Development mode is enabled.
-        </Text>
-      );
-    } else {
-      return (
-        <Text style={styles.developmentModeText}>
-          Development mode disabled.
-        </Text>
-      );
-    }
   }
 
   _submitSearchQuery() {
@@ -149,25 +139,19 @@ export default class HomeScreen extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  developmentModeText: {
-    marginBottom: 20,
-    color: 'rgba(0,0,0,0.4)',
-    fontSize: 14,
-    lineHeight: 19,
-    textAlign: 'center',
+    backgroundColor: Colors.backgroundColor,
+    paddingTop: 30
   },
   contentContainer: {
-    paddingTop: 30,
+
   },
   welcomeContainer: {
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 20,
   },
-  welcomeImage: {
-    width: 100,
+  bannerImage: {
+    width: 240,
     height: 80,
     resizeMode: 'contain',
     marginTop: 3,
@@ -177,47 +161,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 50,
   },
+  searchContainer: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    backgroundColor: Colors.backgroundSecondary,
+    borderColor: Colors.secondaryBorder,
+    borderRadius: 8,
+    borderWidth: 1
+  },
+  searchInput: {
+    flex: 1,
+    height: 48,
+    color: Colors.textColor
+  },
+  searchIcon: {
+    marginRight: 6
+  },
+  gameMeta: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  metaIcon: {
+    marginRight: 4
+  },
+  cardTitle: {
+    color: Colors.textColor,
+    fontWeight: 'bold',
+    fontSize: 20
+  },
+  cardText: {
+    color: Colors.textColor,
+    fontSize: 16
+  },
   homeScreenFilename: {
     marginVertical: 7,
-  },
-  codeHighlightText: {
-    color: 'rgba(96,100,109, 0.8)',
-  },
-  codeHighlightContainer: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  getStartedText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
-    lineHeight: 24,
-    textAlign: 'center',
-  },
-  tabBarInfoContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: 'black',
-        shadowOffset: { height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
-    alignItems: 'center',
-    backgroundColor: '#fbfbfb',
-    paddingVertical: 20,
-  },
-  tabBarInfoText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
-    textAlign: 'center',
   },
   navigationFilename: {
     marginTop: 5,
