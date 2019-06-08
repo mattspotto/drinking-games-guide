@@ -82,7 +82,6 @@ export default class HomeScreen extends React.Component {
         min_players,
         maximum_players,
         recommended_players,
-        players,
         time,
         // Nested full text fields
         rules,
@@ -124,13 +123,27 @@ export default class HomeScreen extends React.Component {
         <View>
           <Text style={styles.text}>Category {category}</Text>
           <Text style={styles.text}>Intensity {intensity}</Text>
-          <Text style={styles.text}>{description.map(paragraph => paragraph.text)}</Text>
-          <Text style={styles.text}>Players:</Text>
-          <Text style={styles.text}>Min {min_players}</Text>
-          <Text style={styles.text}>Max {maximum_players}</Text>
-          <Text style={styles.text}>Recommended {recommended_players}</Text>
-          <Text style={styles.text}>Players {players}</Text>
-          <Text style={styles.text}>{time}</Text>
+          <Text style={styles.text}>Time {time}</Text>
+
+          <View style={styles.row}>
+            <Icon.MaterialCommunityIcons
+              name="account-multiple"
+              size={26}
+              color="white"
+              style={styles.metaIcon}
+            />
+
+            <View>
+              <Text style={styles.text}>{min_players} - {maximum_players}</Text>
+              <Text style={styles.text}>({recommended_players})</Text>
+            </View>
+          </View>
+
+          <Text style={[styles.text, styles.subtle]}>
+            {description.map(paragraph => paragraph.text)}
+          </Text>
+
+          <Text style={styles.title}>Rules</Text>
 
           {rulesEl}
         </View>
@@ -178,13 +191,21 @@ const styles = StyleSheet.create({
     paddingBottom: 8
   },
   title: {
+    paddingBottom: 12,
     fontSize: 24,
-    color: Colors.textColor
+    color: Colors.textColorLight
   },
   text: {
+    fontSize: 16,
+    color: Colors.textColorLight
+  },
+  subtle: {
     color: Colors.textColor
   },
   link: {
     color: Colors.tintColor
+  },
+  row: {
+    flexDirection: 'row'
   }
 });
