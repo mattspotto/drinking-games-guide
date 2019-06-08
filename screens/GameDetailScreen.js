@@ -1,6 +1,7 @@
 import React from 'react';
 import Prismic from 'prismic-javascript';
 import {
+  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -13,6 +14,8 @@ import {
 import { WebBrowser, Icon } from 'expo';
 
 import Colors from '../constants/Colors';
+import { apiEndpoint } from '../constants/Prismic';
+import { get } from '../utils/object';
 
 const defaultGame = {
   name: 'Game not found',
@@ -33,87 +36,127 @@ export default class HomeScreen extends React.Component {
     }
   });
 
+  constructor(props) {
+    super(props);
+
+    this._submitQuery = this._submitQuery.bind(this);
+
+    this.state = {
+      doc: {}
+    };
+  }
+
+  componentWillMount() {
+    const { navigation } = this.props;
+    const gameData = navigation.getParam('data', defaultGame);
+    const id = navigation.getParam('id', null);
+
+    if (id) {
+      this._submitQuery(id);
+    } else if (gameData) {
+      this.setState({
+        doc: gameData
+      })
+    }
+  }
+
   render() {
     const { navigation } = this.props;
+    const { doc } = this.state;
     const title = navigation.getParam('title', 'Game not found');
-    const gameData = navigation.getParam('item', defaultGame);
-    console.log('PROPS', gameData);
+
+    console.log('PROPS', doc);
     console.log('title', navigation.getParam('title', ''));
 
-    if (gameData.data) {
-      
+    let el = (
+      <View style={styles.horizontal}>
+        <ActivityIndicator size="large" color="white" />
+      </View>
+    );
+
+    if (doc.data) {
+      const {
+        // Plain text fields
+        category,
+        intensity,
+        min_players,
+        maximum_players,
+        recommended_players,
+        players,
+        time,
+        // Nested full text fields
+        rules,
+        description
+      } = doc.data;
+
+      const rulesEl = rules && rules.length
+        ? rules.map(rule => {
+          const id = get(['spans', 0, 'data', 'id'], rule);
+
+          if (id) {
+            return (
+              <TouchableOpacity key={rule.text}
+                onPress={() => this.props.navigation.navigate({
+                  routeName: 'GameDetail',
+                  params: {
+                    id,
+                    title: rule.text,
+                    data: null
+                  },
+                  key: id
+                })}>
+                <View style={styles.ruleItem}>
+                  <Text style={[styles.text, styles.link]}>{rule.text}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }
+
+          return (
+            <View key={rule.text} style={styles.ruleItem}>
+              <Text style={styles.text}>{rule.text}</Text>
+            </View>
+          );
+        })
+        : [];
+
+      el = (
+        <View>
+          <Text style={styles.text}>Category {category}</Text>
+          <Text style={styles.text}>Intensity {intensity}</Text>
+          <Text style={styles.text}>{description.map(paragraph => paragraph.text)}</Text>
+          <Text style={styles.text}>Players:</Text>
+          <Text style={styles.text}>Min {min_players}</Text>
+          <Text style={styles.text}>Max {maximum_players}</Text>
+          <Text style={styles.text}>Recommended {recommended_players}</Text>
+          <Text style={styles.text}>Players {players}</Text>
+          <Text style={styles.text}>{time}</Text>
+
+          {rulesEl}
+        </View>
+      );
     }
-
-    const {
-      // Plain text fields
-      access,
-      category,
-      intensity,
-      min_players,
-      maximum_players,
-      recommended_players,
-      players,
-      time,
-      // Nested full text fields
-      rules,
-      description
-    } = gameData.data;
-
-    const data = {
-      access: 'Free',
-      category: 'Mini',
-      description: [{
-        spans: [],
-        text: 'How many things can you name in a category',
-        type: 'paragraph',
-      }, ],
-      gameimage: {},
-      intensity: 'chilled',
-      items: [{
-        item: {
-          link_type: 'Document',
-        },
-      }, ],
-      maximum_players: 16,
-      min_players: 3,
-      name: [{
-        spans: [],
-        text: 'Categories ',
-        type: 'heading1',
-      }, ],
-      players: '5-20',
-      rating: null,
-      recommended_players: 8,
-      rules: [{
-          spans: [{
-            end: 97,
-            start: 71,
-            type: 'em',
-          }, ],
-          text: ' One person selects a category then starts by saying something from it i.e. Car brands, Holden...',
-          type: 'o-list-item',
-        },
-        {
-          spans: [],
-          text: ' Then go around circle saying something from that category',
-          type: 'o-list-item',
-        },
-        {
-          spans: [],
-          text: 'First person to stuff up drinks',
-          type: 'o-list-item',
-        },
-      ],
-      time: 'short'
-    };
 
     return (
       <View style={styles.container}>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
           <Text style={styles.title}>{title}</Text>
+
+          {el}
         </ScrollView>
       </View>
     );
+  }
+
+  _submitQuery(id) {
+    Prismic.getApi(apiEndpoint).then(api => api.getByID(id))
+      .then(doc => {
+        console.log('document', doc);
+        this.setState({ doc })
+      })
+      .catch(err => {
+        console.log('ERR', err)
+      });
   }
 }
 
@@ -122,9 +165,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundColor,
   },
+  horizontal: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10
+  },
   contentContainer: {
     paddingHorizontal: 12,
     paddingTop: 30,
+  },
+  ruleItem: {
+    paddingBottom: 8
   },
   title: {
     fontSize: 24,
@@ -132,5 +183,8 @@ const styles = StyleSheet.create({
   },
   text: {
     color: Colors.textColor
+  },
+  link: {
+    color: Colors.tintColor
   }
 });

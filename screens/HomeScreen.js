@@ -94,9 +94,11 @@ export default class HomeScreen extends React.Component {
 
       return (
         <TouchableOpacity key={item.id}
-          onPress={() => this.props.navigation.navigate('GameDetail', { item, title })}>
+          onPress={() => this.props.navigation.navigate('GameDetail', { data: item, title })}>
           <Card>
             <Text style={styles.cardTitle}>{title}</Text>
+            <Text style={styles.cardText}>{description.map(paragraph => paragraph.text)}</Text>
+
             <View style={styles.gameMeta}>
               <Icon.MaterialCommunityIcons
                 name="account-multiple"
@@ -108,7 +110,12 @@ export default class HomeScreen extends React.Component {
               <Text style={styles.cardText}>{players}</Text>
             </View>
 
-            <Text style={styles.cardText}>{description.map(paragraph => paragraph.text)}</Text>
+            <Icon.MaterialCommunityIcons
+              name="heart-outline"
+              size={20}
+              color="white"
+              style={styles.metaIcon}
+            />
             <Text style={styles.cardText}>{category}</Text>
           </Card>
         </TouchableOpacity>
@@ -118,7 +125,6 @@ export default class HomeScreen extends React.Component {
 
   _submitSearchQuery() {
     const { text } = this.state;
-    console.log('PRE', text), apiEndpoint;
 
     Prismic.getApi(apiEndpoint).then(api => {
       return api.query([
@@ -189,7 +195,6 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: Colors.textColor,
-    fontWeight: 'bold',
     fontSize: 20
   },
   cardText: {
