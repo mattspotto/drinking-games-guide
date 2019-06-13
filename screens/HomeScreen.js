@@ -1,6 +1,7 @@
 import React from 'react';
 import Prismic from 'prismic-javascript';
 import {
+  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -16,7 +17,7 @@ import { WebBrowser, Icon } from 'expo';
 import { apiEndpoint } from '../constants/Prismic';
 import Colors from '../constants/Colors';
 import Card from '../components/Card';
-import { MonoText } from '../components/StyledText';
+import { InterText } from '../components/StyledText';
 import { extractText } from '../utils/prismicUtils';
 
 export default class HomeScreen extends React.Component {
@@ -34,7 +35,8 @@ export default class HomeScreen extends React.Component {
       data: {
         results: [],
         page: 0
-      }
+      },
+      isFetching: false
     };
   }
 
@@ -43,35 +45,43 @@ export default class HomeScreen extends React.Component {
   }
 
   render() {
+    const { isFetching } = this.state;
+
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.welcomeContainer}>
+        <View style={styles.bannerContainer}>
           <Image
             source={require('../assets/images/TextLogoWhite.png')}
             style={styles.bannerImage}
           />
         </View>
 
-        <View style={styles.getStartedContainer}>
-          <View style={styles.searchContainer}>
-            <Icon.MaterialCommunityIcons
-              name="magnify"
-              size={24}
-              color={Colors.textColor}
-              style={styles.metaIcon}
-            />
+        <View style={styles.searchContainer}>
+          <Icon.MaterialCommunityIcons
+            name="magnify"
+            size={24}
+            color={Colors.textColor}
+            style={styles.metaIcon}
+          />
 
-            <TextInput style={styles.searchInput}
-              placeholder="Search..."
-              placeholderTextColor={Colors.textColorSecondary}
-              onChangeText={text => this.setState({ text })}
-              onEndEditing={this._submitSearchQuery}
-              value={this.state.text}
-            />
-          </View>
+          <TextInput style={styles.searchInput}
+            placeholder="Search..."
+            placeholderTextColor={Colors.textColorSecondary}
+            onChangeText={text => this.setState({ text })}
+            onEndEditing={this._submitSearchQuery}
+            value={this.state.text}
+          />
         </View>
 
-        <ScrollView contentContainerStyle={styles.contentContainer}>
+        <ScrollView style={styles.contentContainer}
+          contentContainerStyle={styles.contentInnerContainer}>
+          {isFetching && (
+            <ActivityIndicator size="large"
+              style={styles.activityIndicator}
+              color={Colors.tintColor}
+            />
+          )}
+
           {this._renderResults()}
         </ScrollView>
       </SafeAreaView>
@@ -96,8 +106,8 @@ export default class HomeScreen extends React.Component {
         <TouchableOpacity key={item.id}
           onPress={() => this.props.navigation.navigate('GameDetail', { data: item, title })}>
           <Card>
-            <Text style={styles.cardTitle}>{title}</Text>
-            <Text style={styles.cardText}>{description.map(paragraph => paragraph.text)}</Text>
+            <InterText style={styles.cardTitle}>{title}</InterText>
+            <InterText style={styles.cardText}>{description.map(paragraph => paragraph.text)}</InterText>
 
             <View style={styles.gameMeta}>
               <Icon.MaterialCommunityIcons
@@ -107,7 +117,7 @@ export default class HomeScreen extends React.Component {
                 style={styles.metaIcon}
               />
 
-              <Text style={styles.cardText}>{players}</Text>
+              <InterText style={styles.cardText}>{players}</InterText>
             </View>
 
             <Icon.MaterialCommunityIcons
@@ -116,7 +126,7 @@ export default class HomeScreen extends React.Component {
               color="white"
               style={styles.metaIcon}
             />
-            <Text style={styles.cardText}>{category}</Text>
+            <InterText style={styles.cardText}>{category}</InterText>
           </Card>
         </TouchableOpacity>
       );
@@ -126,6 +136,8 @@ export default class HomeScreen extends React.Component {
   _submitSearchQuery() {
     const { text } = this.state;
 
+    this.setState({ isFetching: true });
+
     Prismic.getApi(apiEndpoint).then(api => {
       return api.query([
         Prismic.Predicates.at('document.type', 'games'),
@@ -134,10 +146,14 @@ export default class HomeScreen extends React.Component {
     })
       .then(response => {
         console.log('RES', response);
-        this.setState({ data: response })
+        this.setState({
+          data: response,
+          isFetching: false
+        });
       })
       .catch(err => {
         console.log('ERR', err)
+        this.setState({ isFetching: false });
       });
   }
 }
@@ -146,12 +162,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundColor,
-    paddingTop: 30
+    paddingTop: 40
   },
   contentContainer: {
-
+    borderTopWidth: 1,
+    borderTopColor: Colors.backgroundSecondary,
+    flex: 1,
+    backgroundColor: Colors.backgroundColorDark
   },
-  welcomeContainer: {
+  contentInnerContainer: {
+    paddingTop: 12
+  },
+  bannerContainer: {
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 20,
@@ -163,15 +185,12 @@ const styles = StyleSheet.create({
     marginTop: 3,
     marginLeft: -10,
   },
-  getStartedContainer: {
-    alignItems: 'center',
-    marginHorizontal: 50,
-  },
   searchContainer: {
     alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    marginHorizontal: 12,
     paddingHorizontal: 12,
     backgroundColor: Colors.backgroundSecondary,
     borderColor: Colors.secondaryBorder,
@@ -185,6 +204,9 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 6
+  },
+  activityIndicator: {
+    paddingVertical: 20
   },
   gameMeta: {
     flexDirection: 'row',

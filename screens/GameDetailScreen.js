@@ -10,9 +10,11 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  SafeAreaView
 } from 'react-native';
 import { WebBrowser, Icon } from 'expo';
 
+import { InterText } from '../components/StyledText';
 import Colors from '../constants/Colors';
 import { apiEndpoint } from '../constants/Prismic';
 import { get } from '../utils/object';
@@ -20,6 +22,14 @@ import { get } from '../utils/object';
 const defaultGame = {
   name: 'Game not found',
   description: 'This game could not be found, try refreshing or search for a different game'
+};
+
+const getAdditionalStyle = type => {
+  switch (type) {
+    case 'em': return styles.italic;
+    case 'strong': return styles.bold;
+    default: return '';
+  }
 };
 
 export default class HomeScreen extends React.Component {
@@ -88,42 +98,111 @@ export default class HomeScreen extends React.Component {
         description
       } = doc.data;
 
-      const rulesEl = rules && rules.length
-        ? rules.map(rule => {
+      let rulesEl = null;
+
+      if (rules && rules.length) {
+        const parsedText = rules.reduce((rulesAcc, rule) => {
+          const { text, spans } = rule;
+          // todo: check not just the first element
           const id = get(['spans', 0, 'data', 'id'], rule);
 
-          if (id) {
-            return (
-              <TouchableOpacity key={rule.text}
-                onPress={() => this.props.navigation.navigate({
-                  routeName: 'GameDetail',
-                  params: {
-                    id,
-                    title: rule.text,
-                    data: null
-                  },
-                  key: id
-                })}>
-                <View style={styles.ruleItem}>
-                  <Text style={[styles.text, styles.link]}>{rule.text}</Text>
-                </View>
-              </TouchableOpacity>
-            );
+          let ruleData = <InterText style={styles.text}>{text}</InterText>;
+
+          if (spans.length) {
+            ruleData = spans.reduce((acc, span, index) => {
+              const { start, end, type } = span;
+              // Add first text only section if it exists
+              if (!acc.length && start > 0) {
+                acc.push(
+                  <InterText key={text.slice(0, start)} style={styles.text}>
+                    {text.slice(0, start)}
+                  </InterText>
+                );
+              }
+
+              // Add in regular text between last span and this one
+              if (acc.length && acc[acc.length - 1].end < start) {
+                acc.push(
+                  <InterText style={styles.text} key={text.slice(acc[acc.length - 1].end, start)}>
+                    {text.slice(acc[acc.length - 1].end, start)}
+                  </InterText>
+                );
+              }
+
+              if (type === 'hyperlink') {
+                acc.push(
+                  <TouchableOpacity key={text.slice(start, end)}
+                    onPress={() => this.props.navigation.navigate({
+                      routeName: 'GameDetail',
+                      params: {
+                        id,
+                        title: text.slice(start, end),
+                        data: null
+                      },
+                      key: id
+                    })}>
+                    <InterText style={[styles.text, styles.link]}>
+                      {text.slice(start, end)}
+                    </InterText>
+                  </TouchableOpacity>
+                );
+              } else {
+                acc.push(
+                  <InterText style={[styles.text, getAdditionalStyle(type)]}>
+                    {text.slice(start, end)}
+                  </InterText>
+                );
+              }
+
+              // Add remaining chars to the span
+              if (index === spans.length - 1) {
+                acc.push(
+                  <InterText style={styles.text}>
+                    {text.slice(end, text.length - 1)}
+                  </InterText>
+                );
+              }
+
+              return acc;
+            }, []);
           }
 
-          return (
+          let olPrefix = null;
+          if (rule.type === 'o-list-item') {
+            rulesAcc.olCounter++;
+            olPrefix = <InterText style={styles.text}>{`${rulesAcc.olCounter}. `}</InterText>;
+          } else {
+            rulesAcc.olCounter = 1;
+          }
+
+          rulesAcc.rules.push(
             <View key={rule.text} style={styles.ruleItem}>
-              <Text style={styles.text}>{rule.text}</Text>
+              {olPrefix}
+
+              {rule.type === 'list-item' && (
+                <Icon.MaterialCommunityIcons
+                  name="circle-small"
+                  size={26}
+                  color="white"
+                  style={styles.metaIcon}
+                />
+              )}
+
+              {ruleData}
             </View>
           );
-        })
-        : [];
+
+          return rulesAcc;
+        }, { rules: [], olCounter: 0 });
+
+        rulesEl = parsedText.rules;
+      }
 
       el = (
         <View>
-          <Text style={styles.text}>Category {category}</Text>
-          <Text style={styles.text}>Intensity {intensity}</Text>
-          <Text style={styles.text}>Time {time}</Text>
+          <InterText style={styles.text}>Category {category}</InterText>
+          <InterText style={styles.text}>Intensity {intensity}</InterText>
+          <InterText style={styles.text}>Time {time}</InterText>
 
           <View style={styles.row}>
             <Icon.MaterialCommunityIcons
@@ -134,16 +213,16 @@ export default class HomeScreen extends React.Component {
             />
 
             <View>
-              <Text style={styles.text}>{min_players} - {maximum_players}</Text>
-              <Text style={styles.text}>({recommended_players})</Text>
+              <InterText style={styles.text}>{min_players} - {maximum_players}</InterText>
+              <InterText style={styles.text}>({recommended_players})</InterText>
             </View>
           </View>
 
-          <Text style={[styles.text, styles.subtle]}>
+          <InterText style={[styles.text, styles.subtle]}>
             {description.map(paragraph => paragraph.text)}
-          </Text>
+          </InterText>
 
-          <Text style={styles.title}>Rules</Text>
+          <InterText style={styles.title}>Rules</InterText>
 
           {rulesEl}
         </View>
@@ -151,13 +230,13 @@ export default class HomeScreen extends React.Component {
     }
 
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
           <Text style={styles.title}>{title}</Text>
 
           {el}
         </ScrollView>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -188,6 +267,7 @@ const styles = StyleSheet.create({
     paddingTop: 30,
   },
   ruleItem: {
+    flexDirection: 'row',
     paddingBottom: 8
   },
   title: {
@@ -198,6 +278,12 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     color: Colors.textColorLight
+  },
+  bold: {
+    fontWeight: 'bold'
+  },
+  italic: {
+    fontStyle: 'italic'
   },
   subtle: {
     color: Colors.textColor
