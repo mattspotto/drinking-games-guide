@@ -12,18 +12,19 @@ import {
   View,
   SafeAreaView
 } from 'react-native';
-import { WebBrowser, Icon } from 'expo';
+import { WebBrowser, Icon, LinearGradient } from 'expo';
 
 import { apiEndpoint } from '../constants/Prismic';
 import Colors from '../constants/Colors';
-import Card from '../components/Card';
+import GradientCard from '../components/GradientCard';
 import { InterText } from '../components/StyledText';
 import { extractText } from '../utils/prismicUtils';
+import { defaultNavigationProps } from '../navigation/MainTabNavigator';
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
-    header: null,
-  };
+    headerBackTitle: null
+  }
 
   constructor(props) {
     super(props);
@@ -73,17 +74,22 @@ export default class HomeScreen extends React.Component {
           />
         </View>
 
-        <ScrollView style={styles.contentContainer}
-          contentContainerStyle={styles.contentInnerContainer}>
-          {isFetching && (
-            <ActivityIndicator size="large"
-              style={styles.activityIndicator}
-              color={Colors.tintColor}
-            />
-          )}
+        <LinearGradient colors={['#1D2438', '#151A29']}
+          start={[1, 0]}
+          end={[0, 1]}
+          style={styles.block}>
+          <ScrollView style={styles.contentContainer}
+            contentContainerStyle={styles.contentInnerContainer}>
+            {isFetching && (
+              <ActivityIndicator size="large"
+                style={styles.activityIndicator}
+                color={Colors.tintColor}
+              />
+            )}
 
-          {this._renderResults()}
-        </ScrollView>
+            {this._renderResults()}
+          </ScrollView>
+        </LinearGradient>
       </SafeAreaView>
     );
   }
@@ -105,29 +111,30 @@ export default class HomeScreen extends React.Component {
       return (
         <TouchableOpacity key={item.id}
           onPress={() => this.props.navigation.navigate('GameDetail', { data: item, title })}>
-          <Card>
-            <InterText style={styles.cardTitle}>{title}</InterText>
-            <InterText style={styles.cardText}>{description.map(paragraph => paragraph.text)}</InterText>
+          <GradientCard>
+            <View style={styles.row}>
+              <View>
+                <InterText style={styles.cardTitle}>{title}</InterText>
+                <InterText style={styles.cardText}>{description.map(paragraph => paragraph.text)}</InterText>
+              </View>
 
-            <View style={styles.gameMeta}>
-              <Icon.MaterialCommunityIcons
-                name="account-multiple"
-                size={20}
-                color="white"
-                style={styles.metaIcon}
-              />
 
-              <InterText style={styles.cardText}>{players}</InterText>
+              <View style={styles.gameMeta}>
+                <Icon.MaterialCommunityIcons
+                  name="account-multiple"
+                  size={20}
+                  color="white"
+                  style={styles.metaIcon}
+                />
+
+                <InterText style={styles.cardText}>{players}</InterText>
+              </View>
             </View>
 
-            <Icon.MaterialCommunityIcons
-              name="heart-outline"
-              size={20}
-              color="white"
-              style={styles.metaIcon}
-            />
-            <InterText style={styles.cardText}>{category}</InterText>
-          </Card>
+            <View style={styles.badge}>
+              <InterText style={styles.badgeText}>{category}</InterText>
+            </View>
+          </GradientCard>
         </TouchableOpacity>
       );
     });
@@ -142,7 +149,7 @@ export default class HomeScreen extends React.Component {
       return api.query([
         Prismic.Predicates.at('document.type', 'games'),
         Prismic.Predicates.fulltext('document', text)
-      ]);
+      ], { orderings : '[my.games.rating desc]' });
     })
       .then(response => {
         console.log('RES', response);
@@ -168,22 +175,34 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.backgroundSecondary,
     flex: 1,
-    backgroundColor: Colors.backgroundColorDark
+    // backgroundColor: Colors.backgroundColorDark
+  },
+  block: {
+    flex: 1
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'white',
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    borderRadius: 4
+  },
+  badgeText: {
+    fontSize: 12,
+    color: 'white'
   },
   contentInnerContainer: {
     paddingTop: 12
   },
   bannerContainer: {
     alignItems: 'center',
-    marginTop: 10,
     marginBottom: 20,
   },
   bannerImage: {
     width: 240,
     height: 80,
-    resizeMode: 'contain',
-    marginTop: 3,
-    marginLeft: -10,
+    resizeMode: 'contain'
   },
   searchContainer: {
     alignSelf: 'stretch',

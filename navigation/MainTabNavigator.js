@@ -8,27 +8,57 @@ import HomeScreen from '../screens/HomeScreen';
 import GameDetailScreen from '../screens/GameDetailScreen';
 import FavouritesScreen from '../screens/FavouritesScreen';
 
+export const defaultNavigationProps = {
+  headerTintColor: Colors.tintColor,
+  headerTitleStyle: {
+    color: Colors.tintColor
+  },
+  headerStyle: {
+    backgroundColor: Colors.backgroundSecondary,
+    paddingVertical: 12,
+    borderBottomColor: Colors.secondaryBorder
+  }
+};
+
+export const homeNavigationProps = {
+  headerStyle: {
+    backgroundColor: Colors.backgroundColor,
+    borderBottomColor: Colors.backgroundColor,
+    paddingVertical: 0
+  }
+};
+
 const HomeStack = createStackNavigator({
   Home: HomeScreen,
   GameDetail: GameDetailScreen,
+}, {
+  defaultNavigationOptions: homeNavigationProps
 });
 
-HomeStack.navigationOptions = {
-  tabBarLabel: 'Home',
-  tabBarIcon: ({ focused }) => (
-    <TabBarIcon
-      focused={focused}
-      name={
-        Platform.OS === 'ios'
-          ? `ios-information-circle${focused ? '' : '-outline'}`
-          : 'md-information-circle'
-      }
-    />
-  ),
+HomeStack.navigationOptions = ({ navigation }) => {
+  let tabBarVisible = true;
+  if (navigation.state.index > 0) {
+    tabBarVisible = false;
+  }
+
+  return {
+    tabBarVisible,
+    tabBarLabel: 'Home',
+    tabBarIcon: ({ focused }) => (
+      <TabBarIcon
+        focused={focused}
+        name={
+          Platform.OS === 'ios'
+            ? `ios-information-circle${focused ? '' : '-outline'}`
+            : 'md-information-circle'
+        }
+      />
+    ),
+  };
 };
 
 const FavouritesStack = createStackNavigator({
-  Favourites: FavouritesScreen,
+  Favourites: FavouritesScreen
 });
 
 FavouritesStack.navigationOptions = {

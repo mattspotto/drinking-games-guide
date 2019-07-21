@@ -1,4 +1,5 @@
 const tintColor = '#FFAE00';
+const tintSecondary = '#F06543';
 
 export default {
   backgroundColor: '#151a29',
@@ -7,6 +8,7 @@ export default {
   deepSpaceSparkle: '#3E5C76',
   secondaryBorder: '#242C47',
   tintColor,
+  tintSecondary,
   tabIconDefault: '#ccc',
   tabIconSelected: tintColor,
   tabBar: '#1E243A',

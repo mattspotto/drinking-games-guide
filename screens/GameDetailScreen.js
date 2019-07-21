@@ -3,6 +3,7 @@ import Prismic from 'prismic-javascript';
 import {
   ActivityIndicator,
   Image,
+  Button,
   Platform,
   ScrollView,
   StyleSheet,
@@ -18,32 +19,23 @@ import { InterText } from '../components/StyledText';
 import Colors from '../constants/Colors';
 import { apiEndpoint } from '../constants/Prismic';
 import { get } from '../utils/object';
+import { RichText } from '../utils/prismicUtils';
+import { defaultNavigationProps } from '../navigation/MainTabNavigator';
 
 const defaultGame = {
   name: 'Game not found',
   description: 'This game could not be found, try refreshing or search for a different game'
 };
 
-const getAdditionalStyle = type => {
-  switch (type) {
-    case 'em': return styles.italic;
-    case 'strong': return styles.bold;
-    default: return '';
-  }
-};
-
-export default class HomeScreen extends React.Component {
+export default class GameDetailScreen extends React.Component {
   static navigationOptions = ({ navigation }) => ({
-    title: `${navigation.state.params.title}`,
-    headerTintColor: Colors.tintColor,
-    headerTitleStyle: {
-      color: Colors.tintColor
-    },
-    headerStyle: {
-      backgroundColor: Colors.backgroundSecondary,
-      paddingVertical: 12,
-      borderBottomColor: Colors.secondaryBorder
-    }
+    ...defaultNavigationProps,
+    title: `${get(['state', 'params', 'title'], navigation) || 'Unknown'}`,
+    headerBackImage: (
+      <Image source={require('../assets/images/logo-slanted.png')}
+        style={{ width: 60, height: 60 }}
+      />
+    )
   });
 
   constructor(props) {
@@ -52,7 +44,12 @@ export default class HomeScreen extends React.Component {
     this._submitQuery = this._submitQuery.bind(this);
 
     this.state = {
-      doc: {}
+      doc: {},
+      tipsData: {
+        results: [],
+        page: 0
+      },
+      tipsShown: false
     };
   }
 
@@ -66,17 +63,66 @@ export default class HomeScreen extends React.Component {
     } else if (gameData) {
       this.setState({
         doc: gameData
-      })
+      });
+
+      this._fetchTips(gameData);
     }
+  }
+
+  renderTips() {
+    const { results } = this.state.tipsData;
+
+    return results.map(item => {
+      const {
+        intensity,
+        tip
+      } = item.data;
+
+      return <RichText paragraphs={tip} />;
+    });
+  }
+
+  renderRules() {
+    const { doc } = this.state;
+
+    let el = null;
+
+    if (doc.data) {
+      const {
+        // Plain text fields
+        category,
+        intensity,
+        min_players,
+        maximum_players,
+        recommended_players,
+        time,
+        // Nested full text fields
+        rules,
+        description
+      } = doc.data;
+
+      el = (
+        <View>
+          <InterText style={styles.title}>Rules</InterText>
+
+          <RichText paragraphs={rules} />
+        </View>
+      );
+    }
+
+    return (
+      <ScrollView style={styles.bottomContainer} contentContainerStyle={styles.contentContainer}>
+        {el}
+      </ScrollView>
+    );
   }
 
   render() {
     const { navigation } = this.props;
-    const { doc } = this.state;
+    const { doc, tipsShown } = this.state;
     const title = navigation.getParam('title', 'Game not found');
 
-    console.log('PROPS', doc);
-    console.log('title', navigation.getParam('title', ''));
+    // console.log('PROPS', doc);
 
     let el = (
       <View style={styles.horizontal}>
@@ -94,109 +140,8 @@ export default class HomeScreen extends React.Component {
         recommended_players,
         time,
         // Nested full text fields
-        rules,
         description
       } = doc.data;
-
-      let rulesEl = null;
-
-      if (rules && rules.length) {
-        const parsedText = rules.reduce((rulesAcc, rule) => {
-          const { text, spans } = rule;
-          // todo: check not just the first element
-          const id = get(['spans', 0, 'data', 'id'], rule);
-
-          let ruleData = <InterText style={styles.text}>{text}</InterText>;
-
-          if (spans.length) {
-            ruleData = spans.reduce((acc, span, index) => {
-              const { start, end, type } = span;
-              // Add first text only section if it exists
-              if (!acc.length && start > 0) {
-                acc.push(
-                  <InterText key={text.slice(0, start)} style={styles.text}>
-                    {text.slice(0, start)}
-                  </InterText>
-                );
-              }
-
-              // Add in regular text between last span and this one
-              if (acc.length && acc[acc.length - 1].end < start) {
-                acc.push(
-                  <InterText style={styles.text} key={text.slice(acc[acc.length - 1].end, start)}>
-                    {text.slice(acc[acc.length - 1].end, start)}
-                  </InterText>
-                );
-              }
-
-              if (type === 'hyperlink') {
-                acc.push(
-                  <TouchableOpacity key={text.slice(start, end)}
-                    onPress={() => this.props.navigation.navigate({
-                      routeName: 'GameDetail',
-                      params: {
-                        id,
-                        title: text.slice(start, end),
-                        data: null
-                      },
-                      key: id
-                    })}>
-                    <InterText style={[styles.text, styles.link]}>
-                      {text.slice(start, end)}
-                    </InterText>
-                  </TouchableOpacity>
-                );
-              } else {
-                acc.push(
-                  <InterText style={[styles.text, getAdditionalStyle(type)]}>
-                    {text.slice(start, end)}
-                  </InterText>
-                );
-              }
-
-              // Add remaining chars to the span
-              if (index === spans.length - 1) {
-                acc.push(
-                  <InterText style={styles.text}>
-                    {text.slice(end, text.length - 1)}
-                  </InterText>
-                );
-              }
-
-              return acc;
-            }, []);
-          }
-
-          let olPrefix = null;
-          if (rule.type === 'o-list-item') {
-            rulesAcc.olCounter++;
-            olPrefix = <InterText style={styles.text}>{`${rulesAcc.olCounter}. `}</InterText>;
-          } else {
-            rulesAcc.olCounter = 1;
-          }
-
-          rulesAcc.rules.push(
-            <View key={rule.text} style={styles.ruleItem}>
-              {olPrefix}
-
-              {rule.type === 'list-item' && (
-                <Icon.MaterialCommunityIcons
-                  name="circle-small"
-                  size={26}
-                  color="white"
-                  style={styles.metaIcon}
-                />
-              )}
-
-              {ruleData}
-            </View>
-          );
-
-          return rulesAcc;
-        }, { rules: [], olCounter: 0 });
-
-        rulesEl = parsedText.rules;
-      }
 
       el = (
         <View>
@@ -221,30 +166,52 @@ export default class HomeScreen extends React.Component {
           <InterText style={[styles.text, styles.subtle]}>
             {description.map(paragraph => paragraph.text)}
           </InterText>
-
-          <InterText style={styles.title}>Rules</InterText>
-
-          {rulesEl}
         </View>
       );
     }
 
     return (
       <SafeAreaView style={styles.container}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-          <Text style={styles.title}>{title}</Text>
-
+        <View style={styles.topContainer}>
           {el}
-        </ScrollView>
+
+          <Button onPress={() => this.setState({ tipsShown: !tipsShown })}
+            title={`${tipsShown ? 'Hide' : 'Show'} Tips`}
+            color={Colors.tintColor}
+          />
+        </View>
+
+        {!tipsShown && this.renderRules()}
+
+        {tipsShown && this.renderTips()}
       </SafeAreaView>
     );
   }
 
   _submitQuery(id) {
-    Prismic.getApi(apiEndpoint).then(api => api.getByID(id))
+    Prismic.getApi(apiEndpoint)
+      .then(api => api.getByID(id))
       .then(doc => {
-        console.log('document', doc);
+        // console.log('document', doc);
         this.setState({ doc })
+        this._fetchTips(doc);
+      })
+      .catch(err => {
+        console.log('ERR', err)
+      });
+  }
+
+  _fetchTips(data) {
+    console.log('fetching tips', data.id);
+
+    Prismic.getApi(apiEndpoint)
+      .then(api => api.query([
+        Prismic.Predicates.at('document.type', 'tips'),
+        Prismic.Predicates.at('my.tips.games.gameid', data.id)
+      ]))
+      .then(tips => {
+        console.log('RESPOMNSE', tips);
+        this.setState({ tipsData: tips });
       })
       .catch(err => {
         console.log('ERR', err)
@@ -255,20 +222,22 @@ export default class HomeScreen extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundColor,
+    backgroundColor: Colors.backgroundColorDark
+  },
+  topContainer: {
+    backgroundColor: Colors.backgroundColor
   },
   horizontal: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 10
   },
-  contentContainer: {
-    paddingHorizontal: 12,
-    paddingTop: 30,
+  bottomContainer: {
+    flex: 1,
+    backgroundColor: Colors.backgroundColorDark
   },
-  ruleItem: {
-    flexDirection: 'row',
-    paddingBottom: 8
+  contentContainer: {
+    paddingTop: 30
   },
   title: {
     paddingBottom: 12,
@@ -279,17 +248,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.textColorLight
   },
-  bold: {
-    fontWeight: 'bold'
-  },
-  italic: {
-    fontStyle: 'italic'
-  },
   subtle: {
     color: Colors.textColor
-  },
-  link: {
-    color: Colors.tintColor
   },
   row: {
     flexDirection: 'row'
