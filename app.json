@@ -3,7 +3,7 @@
     "name": "Drinking Games Guide",
     "slug": "drinking-games-guide",
     "privacy": "public",
-    "sdkVersion": "32.0.0",
+    "sdkVersion": "33.0.0",
     "platforms": [
       "ios",
       "android"

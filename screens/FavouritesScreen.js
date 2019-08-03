@@ -10,9 +10,9 @@ export default class LinksScreen extends React.Component {
       color: Colors.tintColor
     },
     headerStyle: {
-      backgroundColor: Colors.backgroundSecondary,
+      backgroundColor: Colors.b2,
       paddingVertical: 12,
-      borderBottomColor: Colors.secondaryBorder
+      borderBottomColor: Colors.b3
     }
   });
 
@@ -32,7 +32,7 @@ export default class LinksScreen extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundColor,
+    backgroundColor: Colors.b4,
     paddingTop: 40
   },
   inner: {

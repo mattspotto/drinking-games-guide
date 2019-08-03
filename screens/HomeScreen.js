@@ -3,23 +3,19 @@ import Prismic from 'prismic-javascript';
 import {
   ActivityIndicator,
   Image,
-  Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
-  TouchableOpacity,
   View,
   SafeAreaView
 } from 'react-native';
-import { WebBrowser, Icon, LinearGradient } from 'expo';
+import { Icon } from 'expo';
 
 import { apiEndpoint } from '../constants/Prismic';
 import Colors from '../constants/Colors';
-import GradientCard from '../components/GradientCard';
-import { InterText } from '../components/StyledText';
-import { extractText } from '../utils/prismicUtils';
-import { defaultNavigationProps } from '../navigation/MainTabNavigator';
+
+import Results from './Results';
+import Filters from './Filters';
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
@@ -29,7 +25,7 @@ export default class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
 
-    this._submitSearchQuery = this._submitSearchQuery.bind(this);
+    this.submitSearchQuery = this.submitSearchQuery.bind(this);
 
     this.state = {
       text: '',
@@ -42,11 +38,33 @@ export default class HomeScreen extends React.Component {
   }
 
   componentWillMount() {
-    this._submitSearchQuery();
+    this.submitSearchQuery();
+  }
+
+  submitSearchQuery() {
+    const { text } = this.state;
+
+    this.setState({ isFetching: true });
+
+    Prismic.getApi(apiEndpoint).then(api => api.query([
+      Prismic.Predicates.at('document.type', 'games'),
+      Prismic.Predicates.fulltext('document', text)
+    ], { orderings: '[my.games.rating desc]' }))
+      .then((response) => {
+        console.log('RES', response);
+        this.setState({
+          data: response,
+          isFetching: false
+        });
+      })
+      .catch((err) => {
+        console.log('ERR', err);
+        this.setState({ isFetching: false });
+      });
   }
 
   render() {
-    const { isFetching } = this.state;
+    const { isFetching, text, data } = this.state;
 
     return (
       <SafeAreaView style={styles.container}>
@@ -65,132 +83,56 @@ export default class HomeScreen extends React.Component {
             style={styles.metaIcon}
           />
 
-          <TextInput style={styles.searchInput}
+          <TextInput
+            style={styles.searchInput}
             placeholder="Search..."
             placeholderTextColor={Colors.textColorSecondary}
-            onChangeText={text => this.setState({ text })}
-            onEndEditing={this._submitSearchQuery}
-            value={this.state.text}
+            onChangeText={t => this.setState({ text: t })}
+            onEndEditing={this.submitSearchQuery}
+            value={text}
           />
         </View>
 
-        <LinearGradient colors={['#1D2438', '#151A29']}
-          start={[1, 0]}
-          end={[0, 1]}
-          style={styles.block}>
-          <ScrollView style={styles.contentContainer}
-            contentContainerStyle={styles.contentInnerContainer}>
+        <Filters />
+
+        <View style={[styles.block, styles.resultsBlock]}>
+          <ScrollView
+            style={styles.contentContainer}
+            contentContainerStyle={styles.contentInnerContainer}
+          >
             {isFetching && (
-              <ActivityIndicator size="large"
+              <ActivityIndicator
+                size="large"
                 style={styles.activityIndicator}
                 color={Colors.tintColor}
               />
             )}
 
-            {this._renderResults()}
+            <Results {...this.props} results={data.results} />
           </ScrollView>
-        </LinearGradient>
+        </View>
       </SafeAreaView>
     );
-  }
-
-  _renderResults() {
-    const { results } = this.state.data;
-
-    return results.map(item => {
-      const {
-        name,
-        description,
-        intensity,
-        category,
-        players
-      } = item.data;
-
-      const title = extractText(name);
-
-      return (
-        <TouchableOpacity key={item.id}
-          onPress={() => this.props.navigation.navigate('GameDetail', { data: item, title })}>
-          <GradientCard>
-            <View style={styles.row}>
-              <View>
-                <InterText style={styles.cardTitle}>{title}</InterText>
-                <InterText style={styles.cardText}>{description.map(paragraph => paragraph.text)}</InterText>
-              </View>
-
-
-              <View style={styles.gameMeta}>
-                <Icon.MaterialCommunityIcons
-                  name="account-multiple"
-                  size={20}
-                  color="white"
-                  style={styles.metaIcon}
-                />
-
-                <InterText style={styles.cardText}>{players}</InterText>
-              </View>
-            </View>
-
-            <View style={styles.badge}>
-              <InterText style={styles.badgeText}>{category}</InterText>
-            </View>
-          </GradientCard>
-        </TouchableOpacity>
-      );
-    });
-  }
-
-  _submitSearchQuery() {
-    const { text } = this.state;
-
-    this.setState({ isFetching: true });
-
-    Prismic.getApi(apiEndpoint).then(api => {
-      return api.query([
-        Prismic.Predicates.at('document.type', 'games'),
-        Prismic.Predicates.fulltext('document', text)
-      ], { orderings : '[my.games.rating desc]' });
-    })
-      .then(response => {
-        console.log('RES', response);
-        this.setState({
-          data: response,
-          isFetching: false
-        });
-      })
-      .catch(err => {
-        console.log('ERR', err)
-        this.setState({ isFetching: false });
-      });
   }
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundColor,
+    backgroundColor: Colors.b2,
     paddingTop: 40
   },
   contentContainer: {
     borderTopWidth: 1,
-    borderTopColor: Colors.backgroundSecondary,
+    borderTopColor: Colors.b1,
     flex: 1,
     // backgroundColor: Colors.backgroundColorDark
   },
   block: {
     flex: 1
   },
-  badge: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'white',
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    borderRadius: 4
-  },
-  badgeText: {
-    fontSize: 12,
-    color: 'white'
+  resultsBlock: {
+    backgroundColor: Colors.b1
   },
   contentInnerContainer: {
     paddingTop: 12
@@ -211,8 +153,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginHorizontal: 12,
     paddingHorizontal: 12,
-    backgroundColor: Colors.backgroundSecondary,
-    borderColor: Colors.secondaryBorder,
+    backgroundColor: Colors.b3,
+    borderColor: Colors.b4,
     borderRadius: 8,
     borderWidth: 1
   },
@@ -227,20 +169,8 @@ const styles = StyleSheet.create({
   activityIndicator: {
     paddingVertical: 20
   },
-  gameMeta: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
   metaIcon: {
     marginRight: 4
-  },
-  cardTitle: {
-    color: Colors.textColor,
-    fontSize: 20
-  },
-  cardText: {
-    color: Colors.textColor,
-    fontSize: 16
   },
   homeScreenFilename: {
     marginVertical: 7,

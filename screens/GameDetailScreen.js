@@ -4,16 +4,12 @@ import {
   ActivityIndicator,
   Image,
   Button,
-  Platform,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
   View,
   SafeAreaView
 } from 'react-native';
-import { WebBrowser, Icon } from 'expo';
+import { Icon } from 'expo';
 
 import { InterText } from '../components/StyledText';
 import Colors from '../constants/Colors';
@@ -111,7 +107,7 @@ export default class GameDetailScreen extends React.Component {
     }
 
     return (
-      <ScrollView style={styles.bottomContainer} contentContainerStyle={styles.contentContainer}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
         {el}
       </ScrollView>
     );
@@ -222,19 +218,15 @@ export default class GameDetailScreen extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundColorDark
+    backgroundColor: Colors.b3
   },
   topContainer: {
-    backgroundColor: Colors.backgroundColor
+    backgroundColor: Colors.b2
   },
   horizontal: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 10
-  },
-  bottomContainer: {
-    flex: 1,
-    backgroundColor: Colors.backgroundColorDark
   },
   contentContainer: {
     paddingTop: 30

@@ -14,7 +14,7 @@ export const defaultNavigationProps = {
     color: Colors.tintColor
   },
   headerStyle: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: Colors.b2,
     paddingVertical: 12,
     borderBottomColor: Colors.secondaryBorder
   }
@@ -22,8 +22,8 @@ export const defaultNavigationProps = {
 
 export const homeNavigationProps = {
   headerStyle: {
-    backgroundColor: Colors.backgroundColor,
-    borderBottomColor: Colors.backgroundColor,
+    backgroundColor: Colors.b2,
+    borderBottomColor: Colors.b2,
     paddingVertical: 0
   }
 };
@@ -81,7 +81,7 @@ export default createBottomTabNavigator({
       fontSize: 12,
     },
     style: {
-      backgroundColor: Colors.tabBar,
+      backgroundColor: Colors.b2,
     },
   }
 });
