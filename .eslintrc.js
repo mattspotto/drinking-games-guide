@@ -9,7 +9,11 @@ module.exports = {
     'react/jsx-filename-extension': 'off',
     'react/prop-types': 'off',
     'comma-dangle': 'off',
-    'import/prefer-default-export': 'off'
+    'import/prefer-default-export': 'off',
+    'camelcase': 'off',
+    'react/jsx-one-expression-per-line': 'off',
+    'arrow-parens': 'off',
+    'global-require': 'off',
   },
   'globals': {
     "fetch": false

@@ -23,6 +23,17 @@ const defaultGame = {
   description: 'This game could not be found, try refreshing or search for a different game'
 };
 
+const renderIntensity = intensity => {
+  switch (intensity) {
+    case 'wasted':
+      return require('../assets/images/beer-full.png');
+    case 'drunk':
+      return require('../assets/images/beer-half.png');
+    default:
+      return require('../assets/images/beer-third.png');
+  }
+};
+
 export default class GameDetailScreen extends React.Component {
   static navigationOptions = ({ navigation }) => ({
     ...defaultNavigationProps,
@@ -113,12 +124,8 @@ export default class GameDetailScreen extends React.Component {
     );
   }
 
-  render() {
-    const { navigation } = this.props;
-    const { doc, tipsShown } = this.state;
-    const title = navigation.getParam('title', 'Game not found');
-
-    // console.log('PROPS', doc);
+  renderHeader() {
+    const { doc } = this.state;
 
     let el = (
       <View style={styles.horizontal}>
@@ -139,11 +146,26 @@ export default class GameDetailScreen extends React.Component {
         description
       } = doc.data;
 
+
       el = (
         <View>
-          <InterText style={styles.text}>Category {category}</InterText>
-          <InterText style={styles.text}>Intensity {intensity}</InterText>
-          <InterText style={styles.text}>Time {time}</InterText>
+          <InterText style={styles.text}>
+            Category
+            {category}
+          </InterText>
+
+          <Image source={renderIntensity(intensity)}
+            style={{ width: 42, height: 42 }}
+            resizeMode="contain"
+          />
+
+          <InterText style={styles.text}>
+            {intensity}
+          </InterText>
+          <InterText style={styles.text}>
+            Time
+            {time}
+          </InterText>
 
           <View style={styles.row}>
             <Icon.MaterialCommunityIcons
@@ -155,7 +177,9 @@ export default class GameDetailScreen extends React.Component {
 
             <View>
               <InterText style={styles.text}>{min_players} - {maximum_players}</InterText>
-              <InterText style={styles.text}>({recommended_players})</InterText>
+              <InterText style={styles.text}>
+                ({recommended_players})
+              </InterText>
             </View>
           </View>
 
@@ -166,10 +190,18 @@ export default class GameDetailScreen extends React.Component {
       );
     }
 
+    return el;
+  }
+
+  render() {
+    // const { navigation } = this.props;
+    const { tipsShown } = this.state;
+    // const title = navigation.getParam('title', 'Game not found');
+
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.topContainer}>
-          {el}
+          {this.renderHeader()}
 
           <Button onPress={() => this.setState({ tipsShown: !tipsShown })}
             title={`${tipsShown ? 'Hide' : 'Show'} Tips`}

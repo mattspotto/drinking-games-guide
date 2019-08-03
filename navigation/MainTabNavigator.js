@@ -43,15 +43,10 @@ HomeStack.navigationOptions = ({ navigation }) => {
 
   return {
     tabBarVisible,
-    tabBarLabel: 'Home',
     tabBarIcon: ({ focused }) => (
       <TabBarIcon
         focused={focused}
-        name={
-          Platform.OS === 'ios'
-            ? `ios-information-circle${focused ? '' : '-outline'}`
-            : 'md-information-circle'
-        }
+        name="home"
       />
     ),
   };
@@ -62,11 +57,10 @@ const FavouritesStack = createStackNavigator({
 });
 
 FavouritesStack.navigationOptions = {
-  tabBarLabel: 'Favourites',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'}
+      name="heart"
     />
   ),
 };
@@ -83,5 +77,6 @@ export default createBottomTabNavigator({
     style: {
       backgroundColor: Colors.b2,
     },
+    showLabel: false
   }
 });
