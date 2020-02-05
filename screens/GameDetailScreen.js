@@ -29,6 +29,8 @@ const renderIntensity = intensity => {
       return require('../assets/images/beer-full.png');
     case 'drunk':
       return require('../assets/images/beer-half.png');
+    case 'chilled':
+      return require('../assets/images/beer-third.png');
     default:
       return require('../assets/images/beer-third.png');
   }

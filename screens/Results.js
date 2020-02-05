@@ -8,7 +8,10 @@ import { Icon } from 'expo';
 
 import Colors from '../constants/Colors';
 import Card from '../components/Card';
-import { InterText } from '../components/StyledText';
+import {
+  InterText,
+  InterTextBold
+} from '../components/StyledText';
 import { extractText } from '../utils/prismicUtils';
 
 export default class Results extends React.Component {
@@ -34,23 +37,24 @@ export default class Results extends React.Component {
           <Card>
             <View style={styles.row}>
               <View>
-                <InterText style={styles.cardTitle}>{title}</InterText>
+                <View style={styles.headerRow}>
+                  <InterTextBold style={styles.cardTitle}>{title}</InterTextBold>
+
+                  <View style={styles.gameMeta}>
+                    <Icon.MaterialCommunityIcons
+                      name="account-multiple"
+                      size={20}
+                      color="white"
+                      style={styles.metaIcon}
+                    />
+
+                    <InterText style={styles.cardText}>{players}</InterText>
+                  </View>
+                </View>
 
                 <InterText style={styles.cardText}>
                   {description.map(paragraph => paragraph.text)}
                 </InterText>
-              </View>
-
-
-              <View style={styles.gameMeta}>
-                <Icon.MaterialCommunityIcons
-                  name="account-multiple"
-                  size={20}
-                  color="white"
-                  style={styles.metaIcon}
-                />
-
-                <InterText style={styles.cardText}>{players}</InterText>
               </View>
             </View>
 
@@ -65,7 +69,13 @@ export default class Results extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
   badge: {
+    marginTop: 4,
     alignSelf: 'flex-start',
     borderWidth: 1,
     borderColor: 'white',
