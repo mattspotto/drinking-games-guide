@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { Icon } from 'expo';
 
-import { get } from '../utils/object';
+import { get } from './object';
 import Colors from '../constants/Colors';
 import { InterText } from '../components/StyledText';
 
@@ -51,7 +51,8 @@ export const RichTextParagraph = ({ text, spans }) => {
         const id = get(['data', 'id'], span);
 
         acc.push(
-          <TouchableOpacity key={text.slice(start, end)}
+          <TouchableOpacity
+            key={text.slice(start, end)}
             onPress={() => this.props.navigation.navigate({
               routeName: 'GameDetail',
               params: {
@@ -60,7 +61,8 @@ export const RichTextParagraph = ({ text, spans }) => {
                 data: null
               },
               key: id
-            })}>
+            })}
+          >
             <InterText style={[styles.text, styles.link]}>
               {text.slice(start, end)}
             </InterText>
@@ -68,7 +70,7 @@ export const RichTextParagraph = ({ text, spans }) => {
         );
       } else {
         acc.push(
-          <InterText style={[styles.text, getAdditionalStyle(type)]}>
+          <InterText key={text.slice(start, end)} style={[styles.text, getAdditionalStyle(type)]}>
             {text.slice(start, end)}
           </InterText>
         );
@@ -77,7 +79,7 @@ export const RichTextParagraph = ({ text, spans }) => {
       // Add remaining chars to the span
       if (index === spans.length - 1) {
         acc.push(
-          <InterText style={styles.text}>
+          <InterText key={text.slice(end, text.length - 1)} style={styles.text}>
             {text.slice(end, text.length - 1)}
           </InterText>
         );
@@ -86,11 +88,11 @@ export const RichTextParagraph = ({ text, spans }) => {
       return acc;
     }, []);
   } else {
-    richText = <InterText style={styles.text}>{text}</InterText>;
+    richText = <InterText key={text} style={styles.text}>{text}</InterText>;
   }
 
   return richText;
-}
+};
 
 export const RichText = ({ paragraphs }) => {
   if (paragraphs && paragraphs.length) {
@@ -133,7 +135,7 @@ export const RichText = ({ paragraphs }) => {
   }
 
   return null;
-}
+};
 
 const styles = StyleSheet.create({
   text: {

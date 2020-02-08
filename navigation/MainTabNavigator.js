@@ -1,10 +1,10 @@
 import React from 'react';
-import { Platform } from 'react-native';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import Colors from '../constants/Colors';
 import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/HomeScreen';
+// eslint-disable-next-line import/no-cycle
 import GameDetailScreen from '../screens/GameDetailScreen';
 import FavouritesScreen from '../screens/FavouritesScreen';
 
@@ -32,7 +32,7 @@ const HomeStack = createStackNavigator({
   Home: HomeScreen,
   GameDetail: GameDetailScreen,
 }, {
-  defaultNavigationOptions: homeNavigationProps
+  defaultNavigationOptions: defaultNavigationProps,
 });
 
 HomeStack.navigationOptions = ({ navigation }) => {

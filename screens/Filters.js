@@ -1,9 +1,17 @@
 import React, { Fragment } from 'react';
-import { StyleSheet, View } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Modal,
+  TouchableHighlight,
+  Text
+} from 'react-native';
+import BouncyCheckbox from 'react-native-bouncy-checkbox';
 
 // import Colors from '../constants/Colors';
 import { DarkButton } from '../components/Button';
 import { DarkPicker } from '../components/Picker';
+// import { InterText } from '../components/StyledText';
 
 export default class Filters extends React.Component {
   constructor(props) {
@@ -12,7 +20,22 @@ export default class Filters extends React.Component {
     this.state = {
       players: '0',
       time: '0',
-      category: '0'
+      items: [
+        { checked: true, label: 'House' },
+        { checked: true, label: 'Pub' },
+        { checked: true, label: 'Ping Pong Ball' },
+        { checked: true, label: 'Cans' },
+        { checked: true, label: 'Coins' },
+        { checked: true, label: 'Red Cup' },
+        { checked: true, label: 'Pen/Paper' },
+        { checked: true, label: 'Shots' },
+        { checked: true, label: 'Ball-Like Object' },
+        { checked: true, label: 'Vessel' },
+        { checked: true, label: 'Cards' },
+        { checked: true, label: 'Dice' }
+      ],
+      category: '0',
+      itemsShown: false
     };
   }
 
@@ -20,7 +43,9 @@ export default class Filters extends React.Component {
     const {
       players,
       time,
-      category
+      items,
+      category,
+      itemsShown
     } = this.state;
 
     return (
@@ -70,7 +95,7 @@ export default class Filters extends React.Component {
             ]}
           />
 
-          <DarkButton style={styles.item} type="primary" title="Items" />
+          <DarkButton style={styles.item} type="primary" title="Items" onPress={() => this.setState({ itemsShown: true })} />
 
           <DarkPicker
             type="primary"
@@ -90,6 +115,34 @@ export default class Filters extends React.Component {
             ]}
           />
         </View>
+
+        <Modal
+          animationType="slide"
+          transparent
+          visible={itemsShown}
+          onRequestClose={() => {
+            console.log('Modal closed');
+          }}
+        >
+          <View style={styles.modal}>
+            <View>
+              {items.map(item => (
+                <BouncyCheckbox
+                  isChecked={item.checked}
+                  textColor="#000"
+                  fillColor="red"
+                  text={item.label}
+                />
+              ))}
+
+              <TouchableHighlight
+                onPress={() => this.setState({ itemsShown: false })}
+              >
+                <Text>Hide Modal</Text>
+              </TouchableHighlight>
+            </View>
+          </View>
+        </Modal>
       </Fragment>
     );
   }
@@ -98,11 +151,18 @@ export default class Filters extends React.Component {
 const styles = StyleSheet.create({
   base: {
     flexDirection: 'row',
-    marginHorizontal: 8,
+    marginHorizontal: 10,
     marginBottom: 6
   },
   item: {
-    flex: 1,
-    marginHorizontal: 4
+    flexGrow: 1,
+    flexShrink: 0,
+    marginHorizontal: 2
+  },
+  modal: {
+    width: '90%',
+    height: 'auto',
+    backgroundColor: 'white',
+    borderRadius: 8
   }
 });

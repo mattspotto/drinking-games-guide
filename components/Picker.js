@@ -52,10 +52,12 @@ const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
     textAlign: 'center',
     color: 'white',
+    fontSize: 12
   },
   inputAndroid: {
     textAlign: 'center',
     color: 'white',
+    fontSize: 12
   }
 });
 
@@ -63,9 +65,11 @@ const textStylesPrimary = StyleSheet.create({
   inputIOS: {
     textAlign: 'center',
     color: Colors.tintColor,
+    fontSize: 12
   },
   inputAndroid: {
     textAlign: 'center',
     color: Colors.tintColor,
+    fontSize: 12
   },
 });

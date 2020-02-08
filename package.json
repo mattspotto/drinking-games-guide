@@ -18,7 +18,10 @@
     "prismic-javascript": "^2.0.3",
     "react": "16.8.3",
     "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
+    "react-native-dynamic-vector-icons": "WrathChaos/react-native-dynamic-vector-icons#expo",
+    "react-native-bouncy-checkbox": "^0.0.5",
     "react-native-picker-select": "^6.4.0",
+    "react-native-vector-icons": "^6.6.0",
     "react-navigation": "^3.0.9"
   },
   "devDependencies": {

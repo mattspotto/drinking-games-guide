@@ -16,7 +16,6 @@ import Colors from '../constants/Colors';
 import { apiEndpoint } from '../constants/Prismic';
 import { get } from '../utils/object';
 import { RichText } from '../utils/prismicUtils';
-import { defaultNavigationProps } from '../navigation/MainTabNavigator';
 
 const defaultGame = {
   name: 'Game not found',
@@ -38,10 +37,10 @@ const renderIntensity = intensity => {
 
 export default class GameDetailScreen extends React.Component {
   static navigationOptions = ({ navigation }) => ({
-    ...defaultNavigationProps,
     title: `${get(['state', 'params', 'title'], navigation) || 'Unknown'}`,
     headerBackImage: (
-      <Image source={require('../assets/images/logo-slanted.png')}
+      <Image
+        source={require('../assets/images/logo-slanted.png')}
         style={{ width: 60, height: 60 }}
       />
     )
@@ -79,11 +78,11 @@ export default class GameDetailScreen extends React.Component {
   }
 
   renderTips() {
-    const { results } = this.state.tipsData;
+    const results = get(['tipsData', 'results'], this.state) || [];
 
     return results.map(item => {
       const {
-        intensity,
+        // intensity,
         tip
       } = item.data;
 
@@ -99,15 +98,15 @@ export default class GameDetailScreen extends React.Component {
     if (doc.data) {
       const {
         // Plain text fields
-        category,
-        intensity,
-        min_players,
-        maximum_players,
-        recommended_players,
-        time,
+        // category,
+        // intensity,
+        // min_players,
+        // maximum_players,
+        // recommended_players,
+        // time,
         // Nested full text fields
         rules,
-        description
+        // description
       } = doc.data;
 
       el = (
@@ -156,7 +155,8 @@ export default class GameDetailScreen extends React.Component {
             {category}
           </InterText>
 
-          <Image source={renderIntensity(intensity)}
+          <Image
+            source={renderIntensity(intensity)}
             style={{ width: 42, height: 42 }}
             resizeMode="contain"
           />
@@ -205,7 +205,8 @@ export default class GameDetailScreen extends React.Component {
         <View style={styles.topContainer}>
           {this.renderHeader()}
 
-          <Button onPress={() => this.setState({ tipsShown: !tipsShown })}
+          <Button
+            onPress={() => this.setState({ tipsShown: !tipsShown })}
             title={`${tipsShown ? 'Hide' : 'Show'} Tips`}
             color={Colors.tintColor}
           />
@@ -223,11 +224,11 @@ export default class GameDetailScreen extends React.Component {
       .then(api => api.getByID(id))
       .then(doc => {
         // console.log('document', doc);
-        this.setState({ doc })
+        this.setState({ doc });
         this._fetchTips(doc);
       })
       .catch(err => {
-        console.log('ERR', err)
+        console.log('ERR', err);
       });
   }
 
@@ -244,7 +245,7 @@ export default class GameDetailScreen extends React.Component {
         this.setState({ tipsData: tips });
       })
       .catch(err => {
-        console.log('ERR', err)
+        console.log('ERR', err);
       });
   }
 }
